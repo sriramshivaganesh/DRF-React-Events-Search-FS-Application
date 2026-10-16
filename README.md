@@ -195,9 +195,3 @@ See `.env.example`. Backend settings (`backend/config/settings.py`): `DJANGO_SEC
 - **`database is locked` / 503 during an import:** SQLite allows one writer; searches keep working (WAL) but a second upload waits up to 30 s.
 - **Start over:** `docker compose down -v` removes the data volume.
 
-## Known limitations and verification status
-
-- Import is synchronous inside the upload request (the UI shows an "importing" state). If the import fails it is rolled back and can be retried with the same file.
-- Only the first occurrence of a `serialno` is kept; conflicting records with a reused serial in a later archive are skipped as duplicates.
-- No authentication (assignment scope).
-- **Verification status:** the backend tests, frontend tests, lint, type-check, production build and real-archive import/search (through HTTP and the UI dev server) were executed by the author. The Docker Compose setup was built and started with Docker Desktop on Windows, and the application was confirmed working in the browser at <http://localhost:8080>. Benchmarks were measured outside Docker only; the author did not separately record Docker import or search timings.
