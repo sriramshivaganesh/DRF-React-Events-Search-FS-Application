@@ -1,0 +1,19 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+# Node
+node_modules/
+dist/
+# Local data, secrets, artifacts
+.env
+*.sqlite3
+*.sqlite3-*
+backend/data/
+data/*
+!data/.gitkeep
+*.tgz
+*.part
+.pytest_cache/
+.claude/
+*.log

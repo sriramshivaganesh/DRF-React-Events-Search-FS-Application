@@ -1,0 +1,46 @@
+name: event-search
+
+services:
+  migrate:
+    # One-shot, controlled schema migration; the backend starts only after it succeeds.
+    build: ./backend
+    command: ["python", "manage.py", "migrate", "--noinput"]
+    environment: &backend-env
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Set DJANGO_SECRET_KEY in .env (see .env.example)}
+      DJANGO_DEBUG: "false"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-backend,localhost,127.0.0.1}
+      MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-209715200}
+      DATA_DIR: /data
+    volumes:
+      - event_data:/data
+    restart: "no"
+
+  backend:
+    build: ./backend
+    environment: *backend-env
+    volumes:
+      - event_data:/data
+      # Optional: place events.tgz in ./data to import it from the CLI (see README).
+      - ./data:/seed:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/', timeout=4).status == 200 else 1)"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "${FRONTEND_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  event_data:
